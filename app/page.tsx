@@ -380,7 +380,7 @@ export default function HomePage() {
               {profile.name} · {isGuia ? "Guía" : "Miembro"} · <span className="he-mono">{formatDate(todayISO())}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-2">
             <button
               onClick={() => {
                 setSettingsView("puntos");
