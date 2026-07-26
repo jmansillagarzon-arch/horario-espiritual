@@ -86,3 +86,27 @@ export function scoreFromStates(states: SealState[]): number | null {
   const sum = states.reduce((s, v) => s + (v === "logrado" ? 1 : v === "parcial" ? 0.5 : 0), 0);
   return Math.round((sum / states.length) * 100);
 }
+
+// Semana ISO 8601 (lunes a domingo), formato "YYYY-Www"
+export function currentWeekPeriod(): string {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+export function currentMonthPeriod(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function weekLabel(period: string): string {
+  return `Semana ${period.split("-W")[1]}`;
+}
+
+export function monthPeriodLabel(period: string): string {
+  return monthLabel(period);
+}

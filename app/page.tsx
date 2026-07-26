@@ -6,7 +6,18 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import Seal from "@/components/Seal";
 import { subscribeToPush, subscriptionToRow } from "@/lib/push";
-import { DIMENSIONS, DIM_LABEL, Dimension, Profile, Point, SealState } from "@/lib/types";
+import {
+  DIMENSIONS,
+  DIM_LABEL,
+  Dimension,
+  Profile,
+  Point,
+  SealState,
+  PeriodicItemKey,
+  WEEKLY_ITEMS,
+  MONTHLY_ITEMS,
+  GROUP_ITEMS,
+} from "@/lib/types";
 import {
   todayISO,
   ymOf,
@@ -19,6 +30,9 @@ import {
   formatDay,
   nextState,
   scoreFromStates,
+  currentWeekPeriod,
+  currentMonthPeriod,
+  weekLabel,
 } from "@/lib/helpers";
 
 type DayData = { note: string; values: Record<string, SealState> };
@@ -38,6 +52,7 @@ export default function HomePage() {
 
   const [todayEntryId, setTodayEntryId] = useState<string | null>(null);
   const [todayData, setTodayData] = useState<DayData>({ note: "", values: {} });
+  const [periodicValues, setPeriodicValues] = useState<Partial<Record<PeriodicItemKey, SealState>>>({});
 
   const [newPointName, setNewPointName] = useState("");
   const [newPointDim, setNewPointDim] = useState<Dimension>("dios");
@@ -88,6 +103,7 @@ export default function HomePage() {
     setPoints((pts as Point[]) || []);
 
     await loadToday(userId);
+    await loadPeriodic(userId);
   }
 
   async function loadToday(userId: string) {
@@ -110,6 +126,36 @@ export default function HomePage() {
       setTodayEntryId(null);
       setTodayData({ note: "", values: {} });
     }
+  }
+
+  async function loadPeriodic(userId: string) {
+    const week = currentWeekPeriod();
+    const month = currentMonthPeriod();
+    const { data } = await supabase
+      .from("periodic_entries")
+      .select("item_key, state")
+      .eq("user_id", userId)
+      .in("period", [week, month]);
+    const values: Partial<Record<PeriodicItemKey, SealState>> = {};
+    (data || []).forEach((row: any) => {
+      values[row.item_key as PeriodicItemKey] = row.state;
+    });
+    setPeriodicValues(values);
+  }
+
+  async function cyclePeriodic(itemKey: PeriodicItemKey, period: string) {
+    if (!session) return;
+    const current = periodicValues[itemKey] || "no";
+    const updated = nextState(current);
+    setPeriodicValues((prev) => ({ ...prev, [itemKey]: updated }));
+    try {
+      await supabase
+        .from("periodic_entries")
+        .upsert(
+          { user_id: session.user.id, item_key: itemKey, period, state: updated, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,item_key,period" }
+        );
+    } catch (e) {}
   }
 
   async function ensureTodayEntry(): Promise<string> {
@@ -416,7 +462,7 @@ export default function HomePage() {
           {tab === "hoy" && (
             <div>
               {points.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <p className="he-display text-lg mb-2" style={{ color: "#4f46e5" }}>
                     Página en blanco
                   </p>
@@ -472,6 +518,57 @@ export default function HomePage() {
                   </div>
                 </>
               )}
+
+              <div className="mt-6 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+                <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
+                  SEMANAL · {weekLabel(currentWeekPeriod())}
+                </p>
+                <div className="space-y-2">
+                  {WEEKLY_ITEMS.map((item) => {
+                    const state = periodicValues[item.key] || "no";
+                    return (
+                      <div key={item.key} className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <Seal state={state} onClick={() => cyclePeriodic(item.key, currentWeekPeriod())} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+                <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
+                  MENSUAL · {monthLabel(currentMonthPeriod())}
+                </p>
+                <div className="space-y-2">
+                  {MONTHLY_ITEMS.map((item) => {
+                    const state = periodicValues[item.key] || "no";
+                    return (
+                      <div key={item.key} className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <Seal state={state} onClick={() => cyclePeriodic(item.key, currentMonthPeriod())} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+                <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
+                  COMPROMISO DE GRUPO · {monthLabel(currentMonthPeriod())}
+                </p>
+                <div className="space-y-2">
+                  {GROUP_ITEMS.map((item) => {
+                    const state = periodicValues[item.key] || "no";
+                    return (
+                      <div key={item.key} className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <Seal state={state} onClick={() => cyclePeriodic(item.key, currentMonthPeriod())} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 

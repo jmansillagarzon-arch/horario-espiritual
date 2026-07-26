@@ -50,3 +50,32 @@ export interface EntryValue {
   point_id: string;
   state: SealState;
 }
+
+export type PeriodicItemKey =
+  | "visita_santuario"
+  | "dialogo_pareja"
+  | "renovacion_mensual"
+  | "confesion"
+  | "reunion_grupo";
+
+export interface PeriodicEntry {
+  id: string;
+  user_id: string;
+  item_key: PeriodicItemKey;
+  period: string;
+  state: SealState;
+}
+
+export const WEEKLY_ITEMS: { key: PeriodicItemKey; label: string }[] = [
+  { key: "visita_santuario", label: "Visita al Santuario" },
+  { key: "dialogo_pareja", label: "Diálogo de pareja" },
+];
+
+export const MONTHLY_ITEMS: { key: PeriodicItemKey; label: string }[] = [
+  { key: "renovacion_mensual", label: "Renovación mensual" },
+  { key: "confesion", label: "Confesión" },
+];
+
+export const GROUP_ITEMS: { key: PeriodicItemKey; label: string }[] = [
+  { key: "reunion_grupo", label: "Reunión de grupo" },
+];
