@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import Seal from "@/components/Seal";
+import { subscribeToPush, subscriptionToRow } from "@/lib/push";
 import { DIMENSIONS, DIM_LABEL, Dimension, Profile, Point, SealState } from "@/lib/types";
 import {
   todayISO,
@@ -29,7 +30,9 @@ export default function HomePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
-  const [tab, setTab] = useState<"hoy" | "puntos" | "historial" | "grupo">("hoy");
+  const [tab, setTab] = useState<"hoy" | "puntos" | "historial" | "grupo" | "recordatorios">("hoy");
+  const [reminderSaving, setReminderSaving] = useState(false);
+  const [reminderMsg, setReminderMsg] = useState("");
 
   const [todayEntryId, setTodayEntryId] = useState<string | null>(null);
   const [todayData, setTodayData] = useState<DayData>({ note: "", values: {} });
@@ -159,6 +162,53 @@ export default function HomePage() {
   async function removePoint(pointId: string) {
     setPoints((prev) => prev.filter((p) => p.id !== pointId));
     await supabase.from("points").update({ active: false }).eq("id", pointId);
+  }
+
+  // ---------- recordatorios ----------
+  async function handleEnableReminders() {
+    if (!session || !profile) return;
+    setReminderSaving(true);
+    setReminderMsg("");
+    try {
+      const sub = await subscribeToPush();
+      if (!sub) {
+        setReminderMsg("No pudimos activar las notificaciones. Revisá el permiso del navegador.");
+        setReminderSaving(false);
+        return;
+      }
+      const row = subscriptionToRow(sub);
+      await supabase.from("push_subscriptions").upsert({ user_id: session.user.id, ...row }, { onConflict: "endpoint" });
+      const { data: updated } = await supabase
+        .from("profiles")
+        .update({ reminders_enabled: true })
+        .eq("id", session.user.id)
+        .select()
+        .single();
+      if (updated) setProfile(updated as Profile);
+    } catch (e) {
+      setReminderMsg("Ocurrió un error activando los recordatorios.");
+    }
+    setReminderSaving(false);
+  }
+
+  async function handleDisableReminders() {
+    if (!session) return;
+    const { data: updated } = await supabase
+      .from("profiles")
+      .update({ reminders_enabled: false })
+      .eq("id", session.user.id)
+      .select()
+      .single();
+    if (updated) setProfile(updated as Profile);
+  }
+
+  async function saveReminderTime(field: "reminder_morning" | "reminder_midday" | "reminder_night", value: string) {
+    if (!session || !profile) return;
+    setProfile({ ...profile, [field]: value ? `${value}:00` : null });
+    await supabase
+      .from("profiles")
+      .update({ [field]: value || null })
+      .eq("id", session.user.id);
   }
 
   // ---------- historial ----------
@@ -343,6 +393,9 @@ export default function HomePage() {
           <button className={`he-tab ${tab === "historial" ? "active" : ""}`} onClick={() => setTab("historial")}>
             Historial
           </button>
+          <button className={`he-tab ${tab === "recordatorios" ? "active" : ""}`} onClick={() => setTab("recordatorios")}>
+            Recordatorios
+          </button>
           {isGuia && (
             <button className={`he-tab ${tab === "grupo" ? "active" : ""}`} onClick={() => setTab("grupo")}>
               Grupo
@@ -508,6 +561,75 @@ export default function HomePage() {
                       );
                     })}
                 </div>
+              )}
+            </div>
+          )}
+
+          {tab === "recordatorios" && (
+            <div>
+              <p className="text-sm mb-4" style={{ color: "#5b5340" }}>
+                Elegí hasta 3 momentos del día para recibir un recordatorio — mañana, mediodía y noche. Si a esa hora
+                ya marcaste todos tus puntos, no te vamos a molestar.
+              </p>
+
+              {!profile.reminders_enabled ? (
+                <button className="he-btn-primary" onClick={handleEnableReminders} disabled={reminderSaving}>
+                  {reminderSaving ? "Activando..." : "Activar recordatorios en este dispositivo"}
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="he-chip">Recordatorios activos</span>
+                    <button className="he-btn-ghost" onClick={handleDisableReminders}>
+                      Desactivar
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      MAÑANA
+                    </label>
+                    <input
+                      type="time"
+                      step={900}
+                      className="he-input"
+                      defaultValue={profile.reminder_morning?.slice(0, 5) || ""}
+                      onBlur={(e) => saveReminderTime("reminder_morning", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      MEDIODÍA
+                    </label>
+                    <input
+                      type="time"
+                      step={900}
+                      className="he-input"
+                      defaultValue={profile.reminder_midday?.slice(0, 5) || ""}
+                      onBlur={(e) => saveReminderTime("reminder_midday", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      NOCHE
+                    </label>
+                    <input
+                      type="time"
+                      step={900}
+                      className="he-input"
+                      defaultValue={profile.reminder_night?.slice(0, 5) || ""}
+                      onBlur={(e) => saveReminderTime("reminder_night", e.target.value)}
+                    />
+                  </div>
+                  <p className="text-xs" style={{ color: "#8C4A3D" }}>
+                    Dejá un horario vacío si no querés recordatorio en ese momento del día.
+                  </p>
+                </div>
+              )}
+              {reminderMsg && (
+                <p className="text-xs mt-3" style={{ color: "#8C4A3D" }}>
+                  {reminderMsg}
+                </p>
               )}
             </div>
           )}

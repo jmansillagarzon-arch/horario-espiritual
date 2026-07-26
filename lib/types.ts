@@ -22,6 +22,10 @@ export interface Profile {
   role: Role;
   group_code: string;
   created_at: string;
+  reminder_morning: string | null;
+  reminder_midday: string | null;
+  reminder_night: string | null;
+  reminders_enabled: boolean;
 }
 
 export interface Point {
