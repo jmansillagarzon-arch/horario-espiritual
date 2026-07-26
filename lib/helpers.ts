@@ -1,7 +1,11 @@
 import { SealState } from "./types";
 
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function ymOf(iso: string): string {
@@ -53,7 +57,10 @@ export function lastNDates(n: number): string[] {
   for (let i = 0; i < n; i++) {
     const dt = new Date(base);
     dt.setDate(base.getDate() - i);
-    arr.push(dt.toISOString().slice(0, 10));
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    arr.push(`${y}-${m}-${day}`);
   }
   return arr.reverse();
 }
