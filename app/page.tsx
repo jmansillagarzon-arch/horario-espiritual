@@ -332,7 +332,7 @@ export default function HomePage() {
   if (!booted) {
     return (
       <div className="flex items-center justify-center" style={{ minHeight: "100vh" }}>
-        <p className="he-mono text-sm" style={{ color: "#5b5340" }}>
+        <p className="he-mono text-sm" style={{ color: "#6b7280" }}>
           abriendo el cuaderno...
         </p>
       </div>
@@ -342,8 +342,8 @@ export default function HomePage() {
   if (!profile) {
     return (
       <div className="flex items-center justify-center px-4" style={{ minHeight: "100vh" }}>
-        <div className="he-page rounded-lg p-6 pl-10 max-w-sm text-center">
-          <p className="text-sm" style={{ color: "#5b5340" }}>
+        <div className="he-page rounded-2xl p-6 max-w-sm text-center">
+          <p className="text-sm" style={{ color: "#6b7280" }}>
             No encontramos tu perfil todavía. Si acabas de registrarte, confirma tu correo e inicia sesión de nuevo.
           </p>
           <button className="he-btn-primary mt-4" onClick={handleSignOut}>
@@ -370,13 +370,13 @@ export default function HomePage() {
       <div className="max-w-2xl mx-auto">
         <header className="flex items-start justify-between mb-4 px-1">
           <div>
-            <p className="he-mono text-xs" style={{ color: "#8C4A3D" }}>
+            <p className="he-mono text-xs" style={{ color: "#6b7280" }}>
               GRUPO {profile.group_code}
             </p>
-            <h1 className="he-display text-xl" style={{ color: "#1F3B5C" }}>
+            <h1 className="he-display text-xl" style={{ color: "#4f46e5" }}>
               Horario Espiritual
             </h1>
-            <p className="text-xs" style={{ color: "#5b5340" }}>
+            <p className="text-xs" style={{ color: "#6b7280" }}>
               {profile.name} · {isGuia ? "Guía" : "Miembro"} · <span className="he-mono">{formatDate(todayISO())}</span>
             </p>
           </div>
@@ -398,7 +398,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        <nav className="flex gap-1 px-1">
+        <nav className="flex gap-1 px-1 mb-3">
           <button className={`he-tab ${tab === "hoy" ? "active" : ""}`} onClick={() => setTab("hoy")}>
             Hoy
           </button>
@@ -412,15 +412,15 @@ export default function HomePage() {
           )}
         </nav>
 
-        <main className="he-page rounded-b-lg rounded-tr-lg p-5 pl-10">
+        <main className="he-page rounded-2xl p-5">
           {tab === "hoy" && (
             <div>
               {points.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="he-display text-lg mb-2" style={{ color: "#1F3B5C" }}>
+                  <p className="he-display text-lg mb-2" style={{ color: "#4f46e5" }}>
                     Página en blanco
                   </p>
-                  <p className="text-sm mb-4" style={{ color: "#5b5340" }}>
+                  <p className="text-sm mb-4" style={{ color: "#6b7280" }}>
                     Empieza con dos o tres puntos concretos: la oración de la mañana, un tiempo de estudio, el examen
                     de la noche.
                   </p>
@@ -443,12 +443,12 @@ export default function HomePage() {
                         <div key={p.id} className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium">{p.name}</p>
-                            <p className="he-mono text-[10px]" style={{ color: "#8C4A3D" }}>
+                            <p className="he-mono text-[10px]" style={{ color: "#6b7280" }}>
                               {DIM_LABEL[p.dimension]}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs he-mono" style={{ color: "#5b5340", width: 62, textAlign: "right" }}>
+                            <span className="text-xs he-mono" style={{ color: "#6b7280", width: 62, textAlign: "right" }}>
                               {state === "logrado" ? "logrado" : state === "parcial" ? "parcial" : "aún no"}
                             </span>
                             <Seal state={state} onClick={() => cyclePoint(p.id)} />
@@ -458,7 +458,7 @@ export default function HomePage() {
                     })}
                   </div>
                   <div>
-                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                    <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                       NOTA DEL DÍA (OPCIONAL)
                     </label>
                     <textarea
@@ -482,10 +482,10 @@ export default function HomePage() {
                   ← anterior
                 </button>
                 <div className="text-center">
-                  <p className="he-display text-sm capitalize" style={{ color: "#1F3B5C" }}>
+                  <p className="he-display text-sm capitalize" style={{ color: "#4f46e5" }}>
                     {monthLabel(historyYm)}
                   </p>
-                  <p className="he-mono text-[10px]" style={{ color: "#8C4A3D" }}>
+                  <p className="he-mono text-[10px]" style={{ color: "#6b7280" }}>
                     {monthAvg === null ? "sin datos" : `promedio del mes: ${monthAvg}%`}
                   </p>
                 </div>
@@ -498,7 +498,7 @@ export default function HomePage() {
                 </button>
               </div>
               {historyLoading ? (
-                <p className="text-sm he-mono" style={{ color: "#5b5340" }}>
+                <p className="text-sm he-mono" style={{ color: "#6b7280" }}>
                   cargando...
                 </p>
               ) : (
@@ -511,7 +511,7 @@ export default function HomePage() {
                       const pct = scoreFromStates(Object.values(e?.values || {}));
                       return (
                         <div key={d} className="flex items-center justify-between">
-                          <span className="he-mono text-xs capitalize" style={{ color: "#5b5340", width: 70 }}>
+                          <span className="he-mono text-xs capitalize" style={{ color: "#6b7280", width: 70 }}>
                             {formatDay(d)}
                           </span>
                           <div className="flex gap-1 flex-1 justify-center flex-wrap">
@@ -519,7 +519,7 @@ export default function HomePage() {
                               <Seal key={p.id} state={e?.values?.[p.id] || "no"} size={16} disabled />
                             ))}
                           </div>
-                          <span className="he-mono text-xs" style={{ color: "#1F3B5C", width: 42, textAlign: "right" }}>
+                          <span className="he-mono text-xs" style={{ color: "#4f46e5", width: 42, textAlign: "right" }}>
                             {pct === null ? "—" : `${pct}%`}
                           </span>
                         </div>
@@ -533,37 +533,37 @@ export default function HomePage() {
           {tab === "grupo" && isGuia && (
             <div>
               {groupLoading ? (
-                <p className="text-sm he-mono" style={{ color: "#5b5340" }}>
+                <p className="text-sm he-mono" style={{ color: "#6b7280" }}>
                   cargando grupo...
                 </p>
               ) : groupMembers.length === 0 ? (
-                <p className="text-sm" style={{ color: "#5b5340" }}>
+                <p className="text-sm" style={{ color: "#6b7280" }}>
                   Todavía nadie más se unió con el código {profile.group_code}.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs mb-2" style={{ color: "#8C4A3D" }}>
+                  <p className="text-xs mb-2" style={{ color: "#6b7280" }}>
                     Promedio de cumplimiento, últimos 7 días.
                   </p>
                   {groupMembers.map((m) => (
-                    <div key={m.id} className="border-b pb-2" style={{ borderColor: "rgba(36,31,24,0.1)" }}>
+                    <div key={m.id} className="border-b pb-2" style={{ borderColor: "rgba(17,24,39,0.08)" }}>
                       <button className="w-full flex items-center justify-between" onClick={() => toggleExpand(m.id)}>
                         <div className="text-left">
                           <p className="text-sm font-medium">
                             {m.name} {m.role === "guia" && <span className="he-chip ml-1">Guía</span>}
                           </p>
-                          <p className="he-mono text-[10px]" style={{ color: "#8C4A3D" }}>
+                          <p className="he-mono text-[10px]" style={{ color: "#6b7280" }}>
                             {m.pointCount} punto{m.pointCount !== 1 ? "s" : ""}
                           </p>
                         </div>
-                        <span className="he-mono text-sm" style={{ color: "#1F3B5C" }}>
+                        <span className="he-mono text-sm" style={{ color: "#4f46e5" }}>
                           {m.weekScore === null ? "sin datos" : `${m.weekScore}%`}
                         </span>
                       </button>
                       {expandedId === m.id && (
                         <div className="mt-2 pl-2 space-y-1">
                           {expandedPoints.length === 0 && (
-                            <p className="text-xs" style={{ color: "#5b5340" }}>
+                            <p className="text-xs" style={{ color: "#6b7280" }}>
                               Sin puntos definidos todavía.
                             </p>
                           )}
@@ -574,7 +574,7 @@ export default function HomePage() {
                             </div>
                           ))}
                           {expandedData.note && (
-                            <p className="text-xs italic mt-1" style={{ color: "#5b5340" }}>
+                            <p className="text-xs italic mt-1" style={{ color: "#6b7280" }}>
                               "{expandedData.note}"
                             </p>
                           )}
@@ -587,7 +587,7 @@ export default function HomePage() {
             </div>
           )}
         </main>
-        <p className="text-center he-mono text-[10px] mt-4" style={{ color: "#8C4A3D" }}>
+        <p className="text-center he-mono text-[10px] mt-4" style={{ color: "#6b7280" }}>
           "Educar significa concebir vida, despertar vida y transmitir vida." — P. José Kentenich
         </p>
       </div>
@@ -595,16 +595,16 @@ export default function HomePage() {
       {settingsOpen && (
         <div
           className="fixed inset-0 flex items-end sm:items-center justify-center z-50"
-          style={{ background: "rgba(36,31,24,0.45)" }}
+          style={{ background: "rgba(17,24,39,0.45)" }}
           onClick={() => setSettingsOpen(false)}
         >
           <div
-            className="he-page w-full sm:max-w-md sm:rounded-lg rounded-t-lg p-5 pl-9"
+            className="he-page w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl p-5"
             style={{ maxHeight: "85vh", overflowY: "auto" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="he-display text-lg" style={{ color: "#1F3B5C" }}>
+              <h2 className="he-display text-lg" style={{ color: "#4f46e5" }}>
                 Ajustes
               </h2>
               <button className="he-btn-ghost" onClick={() => setSettingsOpen(false)}>
@@ -630,7 +630,7 @@ export default function HomePage() {
             {settingsView === "puntos" && (
               <div>
                 <form onSubmit={addPoint} className="mb-5 space-y-2">
-                  <label className="he-mono text-xs block" style={{ color: "#5b5340" }}>
+                  <label className="he-mono text-xs block" style={{ color: "#6b7280" }}>
                     NUEVO PUNTO
                   </label>
                   <input
@@ -648,7 +648,7 @@ export default function HomePage() {
                         className="he-chip"
                         style={
                           newPointDim === d.id
-                            ? { background: "#1F3B5C", color: "#ECE6D6" }
+                            ? { background: "#4f46e5", color: "#FFFFFF" }
                             : { cursor: "pointer", border: "none" }
                         }
                       >
@@ -662,7 +662,7 @@ export default function HomePage() {
                 </form>
                 <div className="space-y-2">
                   {points.length === 0 && (
-                    <p className="text-sm" style={{ color: "#5b5340" }}>
+                    <p className="text-sm" style={{ color: "#6b7280" }}>
                       Todavía no tienes puntos. Empieza con pocos y concretos.
                     </p>
                   )}
@@ -670,7 +670,7 @@ export default function HomePage() {
                     <div
                       key={p.id}
                       className="flex items-center justify-between border-b pb-2"
-                      style={{ borderColor: "rgba(36,31,24,0.1)" }}
+                      style={{ borderColor: "rgba(17,24,39,0.08)" }}
                     >
                       <div>
                         <p className="text-sm font-medium">{p.name}</p>
@@ -687,7 +687,7 @@ export default function HomePage() {
 
             {settingsView === "recordatorios" && (
               <div>
-                <p className="text-sm mb-4" style={{ color: "#5b5340" }}>
+                <p className="text-sm mb-4" style={{ color: "#6b7280" }}>
                   Elegí hasta 3 momentos del día para recibir un recordatorio — mañana, mediodía y noche. Si a esa
                   hora ya marcaste todos tus puntos, no te vamos a molestar.
                 </p>
@@ -706,7 +706,7 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                         MAÑANA
                       </label>
                       <input
@@ -718,7 +718,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                         MEDIODÍA
                       </label>
                       <input
@@ -730,7 +730,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                         NOCHE
                       </label>
                       <input
@@ -741,13 +741,13 @@ export default function HomePage() {
                         onBlur={(e) => saveReminderTime("reminder_night", e.target.value)}
                       />
                     </div>
-                    <p className="text-xs" style={{ color: "#8C4A3D" }}>
+                    <p className="text-xs" style={{ color: "#6b7280" }}>
                       Dejá un horario vacío si no querés recordatorio en ese momento del día.
                     </p>
                   </div>
                 )}
                 {reminderMsg && (
-                  <p className="text-xs mt-3" style={{ color: "#8C4A3D" }}>
+                  <p className="text-xs mt-3" style={{ color: "#6b7280" }}>
                     {reminderMsg}
                   </p>
                 )}

@@ -2,72 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 html,
 body {
-  background: #e3dcc8;
-  color: #241f18;
+  background: #f9fafb;
+  color: #111827;
   font-family: "Inter", sans-serif;
 }
 
 .he-display {
-  font-family: "Lora", serif;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .he-mono {
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "Inter", sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 .he-page {
-  background-color: #ece6d6;
-  background-image: repeating-linear-gradient(to bottom, transparent, transparent 35px, rgba(36, 31, 24, 0.07) 36px);
-  border: 1px solid rgba(36, 31, 24, 0.15);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 8px 24px rgba(36, 31, 24, 0.12);
-  position: relative;
-}
-
-.he-page::before {
-  content: "";
-  position: absolute;
-  left: 34px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(140, 74, 61, 0.35);
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
 }
 
 .he-tab {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 8px 14px;
-  border: 1px solid rgba(36, 31, 24, 0.18);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  background: #dcd3b8;
-  color: #5b5340;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b7280;
   cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.he-tab:hover {
+  background: #f1f2f4;
 }
 
 .he-tab.active {
-  background: #ece6d6;
-  color: #1f3b5c;
+  background: #4f46e5;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .he-btn-primary {
-  background: #1f3b5c;
-  color: #ece6d6;
+  background: #4f46e5;
+  color: #ffffff;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 10px 18px;
   border: none;
   cursor: pointer;
+  transition: background 120ms ease;
 }
 .he-btn-primary:hover {
-  background: #274a70;
+  background: #4338ca;
 }
 .he-btn-primary:disabled {
   opacity: 0.4;
@@ -76,12 +71,18 @@ body {
 
 .he-btn-ghost {
   background: transparent;
-  color: #8c4a3d;
-  border: 1px solid rgba(140, 74, 61, 0.4);
-  border-radius: 6px;
-  padding: 6px 10px;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px 12px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.he-btn-ghost:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 .he-btn-ghost:disabled {
   opacity: 0.3;
@@ -90,20 +91,25 @@ body {
 
 .he-input {
   font-family: "Inter", sans-serif;
-  background: #f6f2e6;
-  border: 1px solid rgba(36, 31, 24, 0.25);
-  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   padding: 9px 12px;
   width: 100%;
+  transition: border-color 120ms ease;
+}
+.he-input:focus {
+  outline: none;
+  border-color: #4f46e5;
 }
 
 .he-chip {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 2px 8px;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(31, 59, 92, 0.1);
-  color: #1f3b5c;
+  background: #eef2ff;
+  color: #4f46e5;
 }

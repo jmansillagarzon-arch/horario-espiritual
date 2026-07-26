@@ -79,21 +79,21 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center px-4" style={{ minHeight: "100vh" }}>
-      <div className="he-page w-full max-w-sm rounded-lg p-6 pl-10">
-        <p className="he-mono text-xs mb-1" style={{ color: "#8C4A3D" }}>
+      <div className="he-page w-full max-w-sm rounded-2xl p-6">
+        <p className="he-mono text-xs mb-1" style={{ color: "#6b7280" }}>
           SCHOENSTATT · CUADERNO DIGITAL
         </p>
-        <h1 className="he-display text-2xl mb-1" style={{ color: "#1F3B5C" }}>
+        <h1 className="he-display text-2xl mb-1" style={{ color: "#4f46e5" }}>
           Horario Espiritual
         </h1>
-        <p className="text-sm mb-6" style={{ color: "#5b5340" }}>
+        <p className="text-sm mb-6" style={{ color: "#6b7280" }}>
           Actos concretos, cada día, hacia el Ideal Personal.
         </p>
 
         <div className="flex gap-1 mb-4">
           <button
             className="he-tab"
-            style={mode === "signup" ? { background: "#1F3B5C", color: "#ECE6D6", border: "1px solid #1F3B5C" } : {}}
+            style={mode === "signup" ? { background: "#4f46e5", color: "#FFFFFF", border: "1px solid #4f46e5" } : {}}
             onClick={() => setMode("signup")}
             type="button"
           >
@@ -101,7 +101,7 @@ export default function LoginPage() {
           </button>
           <button
             className="he-tab"
-            style={mode === "login" ? { background: "#1F3B5C", color: "#ECE6D6", border: "1px solid #1F3B5C" } : {}}
+            style={mode === "login" ? { background: "#4f46e5", color: "#FFFFFF", border: "1px solid #4f46e5" } : {}}
             onClick={() => setMode("login")}
             type="button"
           >
@@ -112,14 +112,14 @@ export default function LoginPage() {
         <form onSubmit={mode === "signup" ? handleSignup : handleLogin} className="space-y-3">
           {mode === "signup" && (
             <div>
-              <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+              <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                 TU NOMBRE
               </label>
               <input className="he-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="María Ayuda" />
             </div>
           )}
           <div>
-            <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+            <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
               CORREO
             </label>
             <input
@@ -131,7 +131,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+            <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
               CONTRASEÑA
             </label>
             <input
@@ -145,7 +145,7 @@ export default function LoginPage() {
           {mode === "signup" && (
             <>
               <div>
-                <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                   CÓDIGO DE GRUPO
                 </label>
                 <input
@@ -154,13 +154,13 @@ export default function LoginPage() {
                   onChange={(e) => setGroupCode(e.target.value)}
                   placeholder="ej. FAMILIA24"
                 />
-                <p className="text-xs mt-1" style={{ color: "#8C4A3D" }}>
+                <p className="text-xs mt-1" style={{ color: "#6b7280" }}>
                   Cualquiera con este código, si es guía, verá el avance de quienes lo usen. Compártelo solo dentro
                   de tu grupo.
                 </p>
               </div>
               <div>
-                <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                <label className="he-mono text-xs block mb-1" style={{ color: "#6b7280" }}>
                   ROL
                 </label>
                 <div className="flex gap-2">
@@ -168,7 +168,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setRole("miembro")}
                     className="he-tab"
-                    style={role === "miembro" ? { background: "#1F3B5C", color: "#ECE6D6", border: "1px solid #1F3B5C" } : {}}
+                    style={role === "miembro" ? { background: "#4f46e5", color: "#FFFFFF", border: "1px solid #4f46e5" } : {}}
                   >
                     Miembro
                   </button>
@@ -176,7 +176,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setRole("guia")}
                     className="he-tab"
-                    style={role === "guia" ? { background: "#1F3B5C", color: "#ECE6D6", border: "1px solid #1F3B5C" } : {}}
+                    style={role === "guia" ? { background: "#4f46e5", color: "#FFFFFF", border: "1px solid #4f46e5" } : {}}
                   >
                     Guía / acompañante
                   </button>
@@ -185,12 +185,12 @@ export default function LoginPage() {
             </>
           )}
           {error && (
-            <p className="text-xs" style={{ color: "#8C4A3D" }}>
+            <p className="text-xs" style={{ color: "#6b7280" }}>
               {error}
             </p>
           )}
           {info && (
-            <p className="text-xs" style={{ color: "#1F3B5C" }}>
+            <p className="text-xs" style={{ color: "#4f46e5" }}>
               {info}
             </p>
           )}
