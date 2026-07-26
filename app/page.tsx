@@ -390,7 +390,7 @@ export default function HomePage() {
               aria-label="Ajustes"
               title="Mis puntos y recordatorios"
             >
-              ⚙ Ajustes
+              ⚙
             </button>
             <button onClick={handleSignOut} className="he-btn-ghost">
               Cerrar sesión
