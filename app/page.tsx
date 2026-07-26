@@ -30,7 +30,9 @@ export default function HomePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
-  const [tab, setTab] = useState<"hoy" | "puntos" | "historial" | "grupo" | "recordatorios">("hoy");
+  const [tab, setTab] = useState<"hoy" | "historial" | "grupo">("hoy");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsView, setSettingsView] = useState<"puntos" | "recordatorios">("puntos");
   const [reminderSaving, setReminderSaving] = useState(false);
   const [reminderMsg, setReminderMsg] = useState("");
 
@@ -378,23 +380,30 @@ export default function HomePage() {
               {profile.name} · {isGuia ? "Guía" : "Miembro"} · <span className="he-mono">{formatDate(todayISO())}</span>
             </p>
           </div>
-          <button onClick={handleSignOut} className="he-btn-ghost">
-            Cerrar sesión
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setSettingsView("puntos");
+                setSettingsOpen(true);
+              }}
+              className="he-btn-ghost"
+              aria-label="Ajustes"
+              title="Mis puntos y recordatorios"
+            >
+              ⚙ Ajustes
+            </button>
+            <button onClick={handleSignOut} className="he-btn-ghost">
+              Cerrar sesión
+            </button>
+          </div>
         </header>
 
         <nav className="flex gap-1 px-1">
           <button className={`he-tab ${tab === "hoy" ? "active" : ""}`} onClick={() => setTab("hoy")}>
             Hoy
           </button>
-          <button className={`he-tab ${tab === "puntos" ? "active" : ""}`} onClick={() => setTab("puntos")}>
-            Mis puntos
-          </button>
           <button className={`he-tab ${tab === "historial" ? "active" : ""}`} onClick={() => setTab("historial")}>
             Historial
-          </button>
-          <button className={`he-tab ${tab === "recordatorios" ? "active" : ""}`} onClick={() => setTab("recordatorios")}>
-            Recordatorios
           </button>
           {isGuia && (
             <button className={`he-tab ${tab === "grupo" ? "active" : ""}`} onClick={() => setTab("grupo")}>
@@ -415,7 +424,13 @@ export default function HomePage() {
                     Empieza con dos o tres puntos concretos: la oración de la mañana, un tiempo de estudio, el examen
                     de la noche.
                   </p>
-                  <button className="he-btn-primary" onClick={() => setTab("puntos")}>
+                  <button
+                    className="he-btn-primary"
+                    onClick={() => {
+                      setSettingsView("puntos");
+                      setSettingsOpen(true);
+                    }}
+                  >
                     Agregar mis puntos
                   </button>
                 </div>
@@ -457,56 +472,6 @@ export default function HomePage() {
                   </div>
                 </>
               )}
-            </div>
-          )}
-
-          {tab === "puntos" && (
-            <div>
-              <form onSubmit={addPoint} className="mb-5 space-y-2">
-                <label className="he-mono text-xs block" style={{ color: "#5b5340" }}>
-                  NUEVO PUNTO
-                </label>
-                <input
-                  className="he-input"
-                  value={newPointName}
-                  onChange={(e) => setNewPointName(e.target.value)}
-                  placeholder="ej. Oración de la mañana"
-                />
-                <div className="flex flex-wrap gap-1">
-                  {DIMENSIONS.map((d) => (
-                    <button
-                      type="button"
-                      key={d.id}
-                      onClick={() => setNewPointDim(d.id)}
-                      className="he-chip"
-                      style={newPointDim === d.id ? { background: "#1F3B5C", color: "#ECE6D6" } : { cursor: "pointer", border: "none" }}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-                <button type="submit" className="he-btn-primary">
-                  Añadir punto
-                </button>
-              </form>
-              <div className="space-y-2">
-                {points.length === 0 && (
-                  <p className="text-sm" style={{ color: "#5b5340" }}>
-                    Todavía no tienes puntos. Empieza con pocos y concretos.
-                  </p>
-                )}
-                {points.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between border-b pb-2" style={{ borderColor: "rgba(36,31,24,0.1)" }}>
-                    <div>
-                      <p className="text-sm font-medium">{p.name}</p>
-                      <span className="he-chip mt-1 inline-block">{DIM_LABEL[p.dimension]}</span>
-                    </div>
-                    <button className="he-btn-ghost" onClick={() => removePoint(p.id)}>
-                      Quitar
-                    </button>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -561,75 +526,6 @@ export default function HomePage() {
                       );
                     })}
                 </div>
-              )}
-            </div>
-          )}
-
-          {tab === "recordatorios" && (
-            <div>
-              <p className="text-sm mb-4" style={{ color: "#5b5340" }}>
-                Elegí hasta 3 momentos del día para recibir un recordatorio — mañana, mediodía y noche. Si a esa hora
-                ya marcaste todos tus puntos, no te vamos a molestar.
-              </p>
-
-              {!profile.reminders_enabled ? (
-                <button className="he-btn-primary" onClick={handleEnableReminders} disabled={reminderSaving}>
-                  {reminderSaving ? "Activando..." : "Activar recordatorios en este dispositivo"}
-                </button>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="he-chip">Recordatorios activos</span>
-                    <button className="he-btn-ghost" onClick={handleDisableReminders}>
-                      Desactivar
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
-                      MAÑANA
-                    </label>
-                    <input
-                      type="time"
-                      step={900}
-                      className="he-input"
-                      defaultValue={profile.reminder_morning?.slice(0, 5) || ""}
-                      onBlur={(e) => saveReminderTime("reminder_morning", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
-                      MEDIODÍA
-                    </label>
-                    <input
-                      type="time"
-                      step={900}
-                      className="he-input"
-                      defaultValue={profile.reminder_midday?.slice(0, 5) || ""}
-                      onBlur={(e) => saveReminderTime("reminder_midday", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
-                      NOCHE
-                    </label>
-                    <input
-                      type="time"
-                      step={900}
-                      className="he-input"
-                      defaultValue={profile.reminder_night?.slice(0, 5) || ""}
-                      onBlur={(e) => saveReminderTime("reminder_night", e.target.value)}
-                    />
-                  </div>
-                  <p className="text-xs" style={{ color: "#8C4A3D" }}>
-                    Dejá un horario vacío si no querés recordatorio en ese momento del día.
-                  </p>
-                </div>
-              )}
-              {reminderMsg && (
-                <p className="text-xs mt-3" style={{ color: "#8C4A3D" }}>
-                  {reminderMsg}
-                </p>
               )}
             </div>
           )}
@@ -695,6 +591,171 @@ export default function HomePage() {
           "Educar significa concebir vida, despertar vida y transmitir vida." — P. José Kentenich
         </p>
       </div>
+
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 flex items-end sm:items-center justify-center z-50"
+          style={{ background: "rgba(36,31,24,0.45)" }}
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div
+            className="he-page w-full sm:max-w-md sm:rounded-lg rounded-t-lg p-5 pl-9"
+            style={{ maxHeight: "85vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="he-display text-lg" style={{ color: "#1F3B5C" }}>
+                Ajustes
+              </h2>
+              <button className="he-btn-ghost" onClick={() => setSettingsOpen(false)}>
+                Cerrar ✕
+              </button>
+            </div>
+
+            <div className="flex gap-1 mb-4">
+              <button
+                className={`he-tab ${settingsView === "puntos" ? "active" : ""}`}
+                onClick={() => setSettingsView("puntos")}
+              >
+                Mis puntos
+              </button>
+              <button
+                className={`he-tab ${settingsView === "recordatorios" ? "active" : ""}`}
+                onClick={() => setSettingsView("recordatorios")}
+              >
+                Recordatorios
+              </button>
+            </div>
+
+            {settingsView === "puntos" && (
+              <div>
+                <form onSubmit={addPoint} className="mb-5 space-y-2">
+                  <label className="he-mono text-xs block" style={{ color: "#5b5340" }}>
+                    NUEVO PUNTO
+                  </label>
+                  <input
+                    className="he-input"
+                    value={newPointName}
+                    onChange={(e) => setNewPointName(e.target.value)}
+                    placeholder="ej. Oración de la mañana"
+                  />
+                  <div className="flex flex-wrap gap-1">
+                    {DIMENSIONS.map((d) => (
+                      <button
+                        type="button"
+                        key={d.id}
+                        onClick={() => setNewPointDim(d.id)}
+                        className="he-chip"
+                        style={
+                          newPointDim === d.id
+                            ? { background: "#1F3B5C", color: "#ECE6D6" }
+                            : { cursor: "pointer", border: "none" }
+                        }
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                  <button type="submit" className="he-btn-primary">
+                    Añadir punto
+                  </button>
+                </form>
+                <div className="space-y-2">
+                  {points.length === 0 && (
+                    <p className="text-sm" style={{ color: "#5b5340" }}>
+                      Todavía no tienes puntos. Empieza con pocos y concretos.
+                    </p>
+                  )}
+                  {points.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex items-center justify-between border-b pb-2"
+                      style={{ borderColor: "rgba(36,31,24,0.1)" }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{p.name}</p>
+                        <span className="he-chip mt-1 inline-block">{DIM_LABEL[p.dimension]}</span>
+                      </div>
+                      <button className="he-btn-ghost" onClick={() => removePoint(p.id)}>
+                        Quitar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {settingsView === "recordatorios" && (
+              <div>
+                <p className="text-sm mb-4" style={{ color: "#5b5340" }}>
+                  Elegí hasta 3 momentos del día para recibir un recordatorio — mañana, mediodía y noche. Si a esa
+                  hora ya marcaste todos tus puntos, no te vamos a molestar.
+                </p>
+
+                {!profile.reminders_enabled ? (
+                  <button className="he-btn-primary" onClick={handleEnableReminders} disabled={reminderSaving}>
+                    {reminderSaving ? "Activando..." : "Activar recordatorios en este dispositivo"}
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="he-chip">Recordatorios activos</span>
+                      <button className="he-btn-ghost" onClick={handleDisableReminders}>
+                        Desactivar
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                        MAÑANA
+                      </label>
+                      <input
+                        type="time"
+                        step={900}
+                        className="he-input"
+                        defaultValue={profile.reminder_morning?.slice(0, 5) || ""}
+                        onBlur={(e) => saveReminderTime("reminder_morning", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                        MEDIODÍA
+                      </label>
+                      <input
+                        type="time"
+                        step={900}
+                        className="he-input"
+                        defaultValue={profile.reminder_midday?.slice(0, 5) || ""}
+                        onBlur={(e) => saveReminderTime("reminder_midday", e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="he-mono text-xs block mb-1" style={{ color: "#5b5340" }}>
+                        NOCHE
+                      </label>
+                      <input
+                        type="time"
+                        step={900}
+                        className="he-input"
+                        defaultValue={profile.reminder_night?.slice(0, 5) || ""}
+                        onBlur={(e) => saveReminderTime("reminder_night", e.target.value)}
+                      />
+                    </div>
+                    <p className="text-xs" style={{ color: "#8C4A3D" }}>
+                      Dejá un horario vacío si no querés recordatorio en ese momento del día.
+                    </p>
+                  </div>
+                )}
+                {reminderMsg && (
+                  <p className="text-xs mt-3" style={{ color: "#8C4A3D" }}>
+                    {reminderMsg}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
