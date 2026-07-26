@@ -23,7 +23,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
 
   return registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
+    applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource,
   });
 }
 
