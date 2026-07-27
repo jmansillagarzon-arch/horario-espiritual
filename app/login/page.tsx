@@ -80,13 +80,20 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center px-4" style={{ minHeight: "100vh" }}>
       <div className="he-page w-full max-w-sm rounded-2xl p-6">
-        <p className="he-mono text-xs mb-1" style={{ color: "#6b7280" }}>
+        <div className="flex justify-center mb-4">
+          <img
+            src="/images/mater.png"
+            alt="Virgen de Schoenstatt"
+            style={{ width: 88, height: 88, borderRadius: "50%" }}
+          />
+        </div>
+        <p className="he-mono text-xs mb-1 text-center" style={{ color: "#6b7280" }}>
           SCHOENSTATT · CUADERNO DIGITAL
         </p>
-        <h1 className="he-display text-2xl mb-1" style={{ color: "#4f46e5" }}>
+        <h1 className="he-display text-2xl mb-1 text-center" style={{ color: "#4f46e5" }}>
           Horario Espiritual
         </h1>
-        <p className="text-sm mb-6" style={{ color: "#6b7280" }}>
+        <p className="text-sm mb-6 text-center" style={{ color: "#6b7280" }}>
           Actos concretos, cada día, hacia el Ideal Personal.
         </p>
 

@@ -480,7 +480,12 @@ export default function HomePage() {
               {profile.name} · {isGuia ? "Guía" : "Miembro"} · <span className="he-mono">{formatDate(todayISO())}</span>
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-center gap-2">
+            <img
+              src="/images/mater.png"
+              alt="Virgen de Schoenstatt"
+              style={{ width: 56, height: 56, borderRadius: "50%" }}
+            />
             <button
               onClick={() => {
                 setSettingsView("puntos");
@@ -488,12 +493,9 @@ export default function HomePage() {
               }}
               className="he-btn-ghost"
               aria-label="Ajustes"
-              title="Mis puntos y recordatorios"
+              title="Ajustes"
             >
               ⚙
-            </button>
-            <button onClick={handleSignOut} className="he-btn-ghost">
-              Cerrar sesión
             </button>
           </div>
         </header>
@@ -1080,6 +1082,12 @@ export default function HomePage() {
                 )}
               </div>
             )}
+
+            <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+              <button className="he-btn-ghost w-full" onClick={handleSignOut}>
+                Cerrar sesión
+              </button>
+            </div>
           </div>
         </div>
       )}
