@@ -17,6 +17,7 @@ import {
   WEEKLY_ITEMS,
   MONTHLY_ITEMS,
   GROUP_ITEMS,
+  PadrePhrase,
 } from "@/lib/types";
 import {
   todayISO,
@@ -44,9 +45,12 @@ export default function HomePage() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
-  const [tab, setTab] = useState<"hoy" | "historial" | "grupo">("hoy");
+  const [tab, setTab] = useState<"hoy" | "historial" | "grupo" | "telefono">("hoy");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsView, setSettingsView] = useState<"puntos" | "recordatorios">("puntos");
+  const [padrePhrases, setPadrePhrases] = useState<PadrePhrase[]>([]);
+  const [padrePhrase, setPadrePhrase] = useState<PadrePhrase | null>(null);
+  const [padreLoading, setPadreLoading] = useState(false);
   const [reminderSaving, setReminderSaving] = useState(false);
   const [reminderMsg, setReminderMsg] = useState("");
 
@@ -339,9 +343,33 @@ export default function HomePage() {
     setGroupLoading(false);
   }, [profile]);
 
+  // ---------- teléfono del padre ----------
+  function pickRandomPhrase(list: PadrePhrase[], excludeId?: string) {
+    if (list.length === 0) {
+      setPadrePhrase(null);
+      return;
+    }
+    const pool = list.length > 1 && excludeId ? list.filter((p) => p.id !== excludeId) : list;
+    const choice = pool[Math.floor(Math.random() * pool.length)];
+    setPadrePhrase(choice);
+  }
+
+  const loadPadrePhrases = useCallback(async () => {
+    setPadreLoading(true);
+    const { data } = await supabase.from("padre_phrases").select("id, phrase, source").eq("active", true);
+    const list = (data as PadrePhrase[]) || [];
+    setPadrePhrases(list);
+    pickRandomPhrase(list);
+    setPadreLoading(false);
+  }, []);
+
   useEffect(() => {
     if (tab === "grupo") loadGroup();
   }, [tab, loadGroup]);
+
+  useEffect(() => {
+    if (tab === "telefono") loadPadrePhrases();
+  }, [tab, loadPadrePhrases]);
 
   async function toggleExpand(memberId: string) {
     if (expandedId === memberId) {
@@ -450,6 +478,9 @@ export default function HomePage() {
           </button>
           <button className={`he-tab ${tab === "historial" ? "active" : ""}`} onClick={() => setTab("historial")}>
             Historial
+          </button>
+          <button className={`he-tab ${tab === "telefono" ? "active" : ""}`} onClick={() => setTab("telefono")}>
+            Teléfono del Padre
           </button>
           {isGuia && (
             <button className={`he-tab ${tab === "grupo" ? "active" : ""}`} onClick={() => setTab("grupo")}>
@@ -623,6 +654,42 @@ export default function HomePage() {
                       );
                     })}
                 </div>
+              )}
+            </div>
+          )}
+
+          {tab === "telefono" && (
+            <div className="text-center py-6">
+              <p className="he-mono text-xs mb-4" style={{ color: "#6b7280" }}>
+                TELÉFONO DEL PADRE
+              </p>
+              {padreLoading ? (
+                <p className="text-sm he-mono" style={{ color: "#6b7280" }}>
+                  cargando...
+                </p>
+              ) : !padrePhrase ? (
+                <p className="text-sm" style={{ color: "#6b7280" }}>
+                  Todavía no hay frases cargadas.
+                  {isGuia ? " Podés agregarlas desde la base de datos." : " Pedile a tu guía que agregue alguna."}
+                </p>
+              ) : (
+                <>
+                  <p className="he-display text-lg leading-relaxed mb-3" style={{ color: "#111827" }}>
+                    "{padrePhrase.phrase}"
+                  </p>
+                  {padrePhrase.source && (
+                    <p className="text-xs mb-6" style={{ color: "#6b7280" }}>
+                      — {padrePhrase.source}
+                    </p>
+                  )}
+                  <button
+                    className="he-btn-ghost"
+                    onClick={() => pickRandomPhrase(padrePhrases, padrePhrase.id)}
+                    disabled={padrePhrases.length < 2}
+                  >
+                    Otra frase
+                  </button>
+                </>
               )}
             </div>
           )}

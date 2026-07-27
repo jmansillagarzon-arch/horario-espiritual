@@ -79,3 +79,9 @@ export const MONTHLY_ITEMS: { key: PeriodicItemKey; label: string }[] = [
 export const GROUP_ITEMS: { key: PeriodicItemKey; label: string }[] = [
   { key: "reunion_grupo", label: "Reunión de grupo" },
 ];
+
+export interface PadrePhrase {
+  id: string;
+  phrase: string;
+  source: string | null;
+}
