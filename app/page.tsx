@@ -71,7 +71,7 @@ export default function HomePage() {
   const [historyYm, setHistoryYm] = useState(todayISO().slice(0, 7));
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyData, setHistoryData] = useState<Record<string, DayData>>({});
-  const [historyView, setHistoryView] = useState<"lista" | "grilla">("lista");
+  const [historyView, setHistoryView] = useState<"lista" | "grilla" | "notas">("lista");
   const [historyWeekly, setHistoryWeekly] = useState<Record<string, Partial<Record<PeriodicItemKey, SealState>>>>({});
   const [historyMonthly, setHistoryMonthly] = useState<Partial<Record<PeriodicItemKey, SealState>>>({});
   const [historyGroupPurpose, setHistoryGroupPurpose] = useState<GroupPurpose | null>(null);
@@ -763,6 +763,12 @@ export default function HomePage() {
                 >
                   Grilla
                 </button>
+                <button
+                  className={`he-tab ${historyView === "notas" ? "active" : ""}`}
+                  onClick={() => setHistoryView("notas")}
+                >
+                  Notas
+                </button>
               </div>
 
               {historyLoading ? (
@@ -794,7 +800,7 @@ export default function HomePage() {
                       );
                     })}
                 </div>
-              ) : (
+              ) : historyView === "grilla" ? (
                 <div>
                   {points.length === 0 ? (
                     <p className="text-sm" style={{ color: "#6b7280" }}>
@@ -918,6 +924,28 @@ export default function HomePage() {
                       <Seal state={historyMonthly[GROUP_ITEMS[0].key] || "no"} size={18} disabled />
                     )}
                   </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {historyDates
+                    .slice()
+                    .reverse()
+                    .filter((d) => historyData[d]?.note)
+                    .map((d) => (
+                      <div key={d} className="he-page rounded-2xl p-3">
+                        <p className="he-mono text-xs mb-1" style={{ color: "#6b7280" }}>
+                          {formatDay(d)}
+                        </p>
+                        <p className="text-sm" style={{ color: "#111827" }}>
+                          {historyData[d].note}
+                        </p>
+                      </div>
+                    ))}
+                  {historyDates.filter((d) => historyData[d]?.note).length === 0 && (
+                    <p className="text-sm" style={{ color: "#6b7280" }}>
+                      No hay anotaciones cargadas este mes.
+                    </p>
+                  )}
                 </div>
               )}
             </div>
