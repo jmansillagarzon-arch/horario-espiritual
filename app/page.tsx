@@ -18,6 +18,7 @@ import {
   MONTHLY_ITEMS,
   GROUP_ITEMS,
   PadrePhrase,
+  GroupPurpose,
 } from "@/lib/types";
 import {
   todayISO,
@@ -49,7 +50,7 @@ export default function HomePage() {
   const [points, setPoints] = useState<Point[]>([]);
   const [tab, setTab] = useState<"hoy" | "historial" | "grupo" | "telefono">("hoy");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsView, setSettingsView] = useState<"puntos" | "recordatorios">("puntos");
+  const [settingsView, setSettingsView] = useState<"puntos" | "recordatorios" | "ayuda">("puntos");
   const [padrePhrases, setPadrePhrases] = useState<PadrePhrase[]>([]);
   const [padrePhrase, setPadrePhrase] = useState<PadrePhrase | null>(null);
   const [padreLoading, setPadreLoading] = useState(false);
@@ -59,6 +60,10 @@ export default function HomePage() {
   const [todayEntryId, setTodayEntryId] = useState<string | null>(null);
   const [todayData, setTodayData] = useState<DayData>({ note: "", values: {} });
   const [periodicValues, setPeriodicValues] = useState<Partial<Record<PeriodicItemKey, SealState>>>({});
+  const [groupPurpose, setGroupPurpose] = useState<GroupPurpose | null>(null);
+  const [groupPurposeDraft, setGroupPurposeDraft] = useState("");
+  const [groupPurposeSaving, setGroupPurposeSaving] = useState(false);
+  const [editingPurpose, setEditingPurpose] = useState(false);
 
   const [newPointName, setNewPointName] = useState("");
   const [newPointDim, setNewPointDim] = useState<Dimension>("dios");
@@ -69,6 +74,7 @@ export default function HomePage() {
   const [historyView, setHistoryView] = useState<"lista" | "grilla">("lista");
   const [historyWeekly, setHistoryWeekly] = useState<Record<string, Partial<Record<PeriodicItemKey, SealState>>>>({});
   const [historyMonthly, setHistoryMonthly] = useState<Partial<Record<PeriodicItemKey, SealState>>>({});
+  const [historyGroupPurpose, setHistoryGroupPurpose] = useState<GroupPurpose | null>(null);
 
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [groupLoading, setGroupLoading] = useState(false);
@@ -113,6 +119,7 @@ export default function HomePage() {
 
     await loadToday(userId);
     await loadPeriodic(userId);
+    if (prof) await loadGroupPurpose((prof as Profile).group_code);
   }
 
   async function loadToday(userId: string) {
@@ -150,6 +157,42 @@ export default function HomePage() {
       values[row.item_key as PeriodicItemKey] = row.state;
     });
     setPeriodicValues(values);
+  }
+
+  async function loadGroupPurpose(groupCode: string) {
+    const { data } = await supabase
+      .from("group_purposes")
+      .select("id, group_code, period, text")
+      .eq("group_code", groupCode)
+      .eq("period", currentMonthPeriod())
+      .maybeSingle();
+    setGroupPurpose((data as GroupPurpose) || null);
+    setGroupPurposeDraft((data as GroupPurpose)?.text || "");
+  }
+
+  async function saveGroupPurpose() {
+    if (!session || !profile) return;
+    if (!groupPurposeDraft.trim()) return;
+    setGroupPurposeSaving(true);
+    const { data, error } = await supabase
+      .from("group_purposes")
+      .upsert(
+        {
+          group_code: profile.group_code,
+          period: currentMonthPeriod(),
+          text: groupPurposeDraft.trim(),
+          created_by: session.user.id,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "group_code,period" }
+      )
+      .select()
+      .single();
+    if (!error && data) {
+      setGroupPurpose(data as GroupPurpose);
+      setEditingPurpose(false);
+    }
+    setGroupPurposeSaving(false);
   }
 
   async function cyclePeriodic(itemKey: PeriodicItemKey, period: string) {
@@ -313,9 +356,19 @@ export default function HomePage() {
       setHistoryWeekly(weeklyMap);
       setHistoryMonthly(monthlyMap);
 
+      if (profile) {
+        const { data: purposeRow } = await supabase
+          .from("group_purposes")
+          .select("id, group_code, period, text")
+          .eq("group_code", profile.group_code)
+          .eq("period", ym)
+          .maybeSingle();
+        setHistoryGroupPurpose((purposeRow as GroupPurpose) || null);
+      }
+
       setHistoryLoading(false);
     },
-    [session]
+    [session, profile]
   );
 
   useEffect(() => {
@@ -614,19 +667,62 @@ export default function HomePage() {
 
               <div className="mt-5 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
                 <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
-                  COMPROMISO DE GRUPO · {monthLabel(currentMonthPeriod())}
+                  PROPÓSITO DEL GRUPO/CURSO · {monthLabel(currentMonthPeriod())}
                 </p>
-                <div className="space-y-2">
-                  {GROUP_ITEMS.map((item) => {
-                    const state = periodicValues[item.key] || "no";
-                    return (
-                      <div key={item.key} className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-medium">{item.label}</p>
-                        <Seal state={state} onClick={() => cyclePeriodic(item.key, currentMonthPeriod())} />
+
+                {editingPurpose ? (
+                  <div className="space-y-2">
+                    <textarea
+                      className="he-input"
+                      rows={3}
+                      value={groupPurposeDraft}
+                      onChange={(e) => setGroupPurposeDraft(e.target.value)}
+                      placeholder="Escribí el propósito fijado en la última reunión..."
+                    />
+                    <div className="flex gap-2">
+                      <button className="he-btn-primary" onClick={saveGroupPurpose} disabled={groupPurposeSaving}>
+                        {groupPurposeSaving ? "Guardando..." : "Guardar"}
+                      </button>
+                      <button
+                        className="he-btn-ghost"
+                        onClick={() => {
+                          setGroupPurposeDraft(groupPurpose?.text || "");
+                          setEditingPurpose(false);
+                        }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {groupPurpose ? (
+                      <p className="text-sm italic mb-2" style={{ color: "#111827" }}>
+                        "{groupPurpose.text}"
+                      </p>
+                    ) : (
+                      <p className="text-sm mb-2" style={{ color: "#6b7280" }}>
+                        {isGuia
+                          ? "Todavía no fijaste el propósito de este mes."
+                          : "Tu guía todavía no fijó el propósito de este mes."}
+                      </p>
+                    )}
+                    {isGuia && (
+                      <button className="he-btn-ghost mb-3" onClick={() => setEditingPurpose(true)}>
+                        {groupPurpose ? "Editar propósito" : "Fijar propósito del mes"}
+                      </button>
+                    )}
+                    {groupPurpose && (
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">¿Lo estoy viviendo?</p>
+                        <Seal
+                          state={periodicValues[GROUP_ITEMS[0].key] || "no"}
+                          onClick={() => cyclePeriodic(GROUP_ITEMS[0].key, currentMonthPeriod())}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -812,11 +908,15 @@ export default function HomePage() {
                   <div className="he-page rounded-2xl p-3 mt-3 flex items-center justify-between">
                     <div>
                       <p className="he-mono text-xs" style={{ color: "#6b7280" }}>
-                        COMPROMISO DE GRUPO
+                        PROPÓSITO DEL GRUPO/CURSO
                       </p>
-                      <p className="text-sm mt-1">{GROUP_ITEMS[0].label}</p>
+                      <p className="text-sm mt-1 italic">
+                        {historyGroupPurpose ? `"${historyGroupPurpose.text}"` : "No se fijó propósito ese mes."}
+                      </p>
                     </div>
-                    <Seal state={historyMonthly[GROUP_ITEMS[0].key] || "no"} size={18} disabled />
+                    {historyGroupPurpose && (
+                      <Seal state={historyMonthly[GROUP_ITEMS[0].key] || "no"} size={18} disabled />
+                    )}
                   </div>
                 </div>
               )}
@@ -954,6 +1054,12 @@ export default function HomePage() {
               >
                 Recordatorios
               </button>
+              <button
+                className={`he-tab ${settingsView === "ayuda" ? "active" : ""}`}
+                onClick={() => setSettingsView("ayuda")}
+              >
+                Ayuda
+              </button>
             </div>
 
             {settingsView === "puntos" && (
@@ -1079,6 +1185,233 @@ export default function HomePage() {
                   <p className="text-xs mt-3" style={{ color: "#6b7280" }}>
                     {reminderMsg}
                   </p>
+                )}
+              </div>
+            )}
+
+            {settingsView === "ayuda" && (
+              <div className="space-y-5 text-sm" style={{ color: "#374151" }}>
+                <div>
+                  <p className="he-display text-base mb-2" style={{ color: "#4f46e5" }}>
+                    ¿Qué es el Horario Espiritual?
+                  </p>
+                  <p className="mb-2">
+                    No es una lista de tareas: es un instrumento de autoeducación que te ayuda a sostener, día a
+                    día, los pasos concretos hacia tu Ideal Personal. La idea del Padre J. Kentenich era simple pero
+                    exigente: elegir pocos puntos, bien elegidos, y ser fiel a ellos — mejor dos o tres cumplidos de
+                    verdad que diez anotados de apuro.
+                  </p>
+                  <p className="mb-2">Por eso se marca en distintos ritmos:</p>
+                  <ul className="list-disc pl-5 space-y-1 mb-2">
+                    <li>
+                      <strong>Diario:</strong> tus puntos personales — la oración de la mañana, un tiempo de
+                      silencio, el examen antes de dormir.
+                    </li>
+                    <li>
+                      <strong>Semanal:</strong> dos compromisos fijos, como la Visita al Santuario y el Diálogo de
+                      pareja.
+                    </li>
+                    <li>
+                      <strong>Mensual:</strong> la Renovación mensual y la Confesión.
+                    </li>
+                    <li>
+                      <strong>Grupal:</strong> la Reunión — lo que te sostiene junto con los demás, no a solas.
+                    </li>
+                  </ul>
+                  <p>
+                    No se trata de "cuánto marqué en verde", sino de la fidelidad sostenida: un mes con pocos puntos
+                    bien cumplidos vale más que un mes con muchos a medias.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-medium mb-2" style={{ color: "#111827" }}>
+                    Claves para armar el tuyo
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1.5">
+                    <li>
+                      <strong>Concreto, no genérico.</strong> "Ser más paciente" no se puede marcar sí o no. "Contar
+                      hasta diez antes de responder cuando mi hijo se porta mal" sí.
+                    </li>
+                    <li>
+                      <strong>Voy poco a poco.</strong> De menos puntos a más, de menos exigencias a todas las que
+                      yo me quiera poner.
+                    </li>
+                    <li>
+                      <strong>Es personal, no ajeno.</strong> No hago lo que hace Fulano o Zutana. Tiene que
+                      servirme a mí.
+                    </li>
+                    <li>
+                      <strong>Lo hago como hijo.</strong> No como alguien perfecto, ni perfeccionista — como un hijo
+                      pequeño que confía.
+                    </li>
+                    <li>
+                      <strong>Vuelvo a recomenzar siempre de nuevo.</strong> Lo empiezo las veces que sea necesario,
+                      sin desanimarme.
+                    </li>
+                    <li>
+                      <strong>Encontrá tu punto clave.</strong> Con el tiempo vas a notar que uno o dos puntos
+                      sostienen todo lo demás.
+                    </li>
+                    <li>
+                      <strong>Revisá una vez al mes.</strong> Un punto ya automático puede reemplazarse por uno
+                      nuevo. Uno que nunca cumplís tal vez esté mal planteado — no es un fracaso, es información.
+                    </li>
+                  </ul>
+                </div>
+
+                <details className="he-page rounded-2xl p-3">
+                  <summary style={{ cursor: "pointer", fontWeight: 500, color: "#111827" }}>
+                    Mi Propósito Particular: la lucha del mes
+                  </summary>
+                  <div className="mt-2 space-y-2">
+                    <p>
+                      Además de los puntos fijos, cada mes podés elegir una lucha concreta — cobra más fuerza si la
+                      conectás con tu Ideal Personal. Se arma respondiendo tres preguntas:
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-1">
+                      <li>¿En qué área quiero moverme? (con Dios, conmigo mismo, con los hermanos)</li>
+                      <li>¿En qué actitud quiero trabajar? (servicio, alegría, apertura, orden...)</li>
+                      <li>¿Qué acto concreto voy a repetir durante el día para llevarla a cabo?</li>
+                    </ol>
+                  </div>
+                </details>
+
+                <details className="he-page rounded-2xl p-3">
+                  <summary style={{ cursor: "pointer", fontWeight: 500, color: "#111827" }}>
+                    Ejemplos por dimensión, para inspirarte
+                  </summary>
+                  <div className="mt-2 space-y-3">
+                    <div>
+                      <p className="font-medium" style={{ color: "#4f46e5" }}>
+                        Con Dios
+                      </p>
+                      <ul className="list-disc pl-5">
+                        <li>Oración de la mañana de 5 minutos</li>
+                        <li>Saludo a la Sma. Virgen</li>
+                        <li>Bendición de la mesa</li>
+                        <li>Un denario del rosario al mediodía</li>
+                        <li>Misa entre semana</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-medium" style={{ color: "#4f46e5" }}>
+                        Con los demás
+                      </p>
+                      <ul className="list-disc pl-5">
+                        <li>Preguntarle a mi pareja cómo estuvo su día, sin el celular en la mano</li>
+                        <li>Un gesto de cariño con mi cónyuge</li>
+                        <li>Jugar 20 minutos con mis hijos</li>
+                        <li>Llamar a mis padres, o a un hermano de curso, una vez por semana</li>
+                        <li>Pedir perdón el mismo día que ofendo a alguien</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-medium" style={{ color: "#4f46e5" }}>
+                        Con el trabajo
+                      </p>
+                      <ul className="list-disc pl-5">
+                        <li>Empezar el día con las tres tareas más importantes anotadas</li>
+                        <li>Ofrecer mi trabajo al comenzar el día</li>
+                        <li>No revisar el mail después de las 21hs</li>
+                        <li>Terminar lo que empiezo antes de abrir algo nuevo</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-medium" style={{ color: "#4f46e5" }}>
+                        Conmigo mismo
+                      </p>
+                      <ul className="list-disc pl-5">
+                        <li>Acostarme antes de las 23hs</li>
+                        <li>20 minutos de caminata</li>
+                        <li>Comer sin repetir</li>
+                        <li>Limitar las pantallas</li>
+                        <li>Un momento de silencio real, sin pantallas</li>
+                      </ul>
+                    </div>
+                  </div>
+                </details>
+
+                <details className="he-page rounded-2xl p-3">
+                  <summary style={{ cursor: "pointer", fontWeight: 500, color: "#111827" }}>
+                    Para meditar cada día
+                  </summary>
+                  <div className="mt-2 space-y-1">
+                    <p>Al terminar el día, unos minutos antes de completar tu Horario Espiritual:</p>
+                    <ul className="list-disc pl-5">
+                      <li>¿Qué le regalé a Dios hoy? ¿Qué logré?</li>
+                      <li>¿Dónde estuvo mi mayor debilidad del día?</li>
+                    </ul>
+                  </div>
+                </details>
+
+                <details className="he-page rounded-2xl p-3">
+                  <summary style={{ cursor: "pointer", fontWeight: 500, color: "#111827" }}>
+                    Para meditar cada mes
+                  </summary>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>
+                      ¿Qué hechos marcaron mi vida, mi comunidad o el mundo este mes? ¿Qué quiso decirme Dios a
+                      través de ellos?
+                    </li>
+                    <li>¿Qué le negué a Dios? ¿Qué le quiero agradecer, qué le quiero pedir?</li>
+                    <li>¿En qué me esforzaré más el mes que viene?</li>
+                  </ul>
+                </details>
+
+                <div className="pt-2" style={{ borderTop: "1px solid #E5E7EB" }}>
+                  <p className="he-display text-base mb-2 mt-3" style={{ color: "#4f46e5" }}>
+                    Cómo usar la app
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                    Hoy
+                  </p>
+                  <p>
+                    Tocá el círculo de cada punto para ir cambiando entre <em>sin marcar</em>, <em>parcial</em> y{" "}
+                    <em>logrado</em>. Debajo de tus puntos diarios vas a ver también lo Semanal, Mensual y el
+                    Propósito del Grupo/Curso — se marcan igual, con un toque.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                    Mis puntos
+                  </p>
+                  <p>Acá agregás o quitás tus puntos diarios personales. Podés elegir a qué dimensión pertenece cada uno.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                    Historial
+                  </p>
+                  <p>
+                    Elegí <strong>Lista</strong> para ver día por día, o <strong>Grilla</strong> para ver el mes
+                    completo de una vez, como la planilla de papel. Usá las flechas para cambiar de mes.
+                  </p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                    Teléfono del Padre
+                  </p>
+                  <p>Te muestra una frase al azar. Tocá "Otra frase" para ver otra.</p>
+                </div>
+                <div>
+                  <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                    Recordatorios
+                  </p>
+                  <p>
+                    Activalos y elegí hasta 3 horarios (mañana, mediodía, noche). Si a esa hora ya marcaste todo, no
+                    te va a llegar el aviso.
+                  </p>
+                </div>
+                {isGuia && (
+                  <div>
+                    <p className="font-medium mb-1" style={{ color: "#111827" }}>
+                      Grupo (solo Guía)
+                    </p>
+                    <p>Ves el avance de todos los que usaron tu mismo código de grupo, y podés tocar a cada uno para ver el detalle.</p>
+                  </div>
                 )}
               </div>
             )}

@@ -85,3 +85,10 @@ export interface PadrePhrase {
   phrase: string;
   source: string | null;
 }
+
+export interface GroupPurpose {
+  id: string;
+  group_code: string;
+  period: string;
+  text: string;
+}
