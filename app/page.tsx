@@ -34,6 +34,8 @@ import {
   currentWeekPeriod,
   currentMonthPeriod,
   weekLabel,
+  weeksInMonth,
+  weekRangeLabel,
 } from "@/lib/helpers";
 
 type DayData = { note: string; values: Record<string, SealState> };
@@ -64,6 +66,9 @@ export default function HomePage() {
   const [historyYm, setHistoryYm] = useState(todayISO().slice(0, 7));
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyData, setHistoryData] = useState<Record<string, DayData>>({});
+  const [historyView, setHistoryView] = useState<"lista" | "grilla">("lista");
+  const [historyWeekly, setHistoryWeekly] = useState<Record<string, Partial<Record<PeriodicItemKey, SealState>>>>({});
+  const [historyMonthly, setHistoryMonthly] = useState<Partial<Record<PeriodicItemKey, SealState>>>({});
 
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [groupLoading, setGroupLoading] = useState(false);
@@ -287,6 +292,27 @@ export default function HomePage() {
         map[row.entry_date] = { note: row.note || "", values };
       });
       setHistoryData(map);
+
+      const weeks = weeksInMonth(ym);
+      const { data: periodicRows } = await supabase
+        .from("periodic_entries")
+        .select("item_key, period, state")
+        .eq("user_id", session.user.id)
+        .in("period", [...weeks, ym]);
+
+      const weeklyMap: Record<string, Partial<Record<PeriodicItemKey, SealState>>> = {};
+      const monthlyMap: Partial<Record<PeriodicItemKey, SealState>> = {};
+      (periodicRows || []).forEach((row: any) => {
+        if (row.period === ym) {
+          monthlyMap[row.item_key as PeriodicItemKey] = row.state;
+        } else {
+          if (!weeklyMap[row.period]) weeklyMap[row.period] = {};
+          weeklyMap[row.period][row.item_key as PeriodicItemKey] = row.state;
+        }
+      });
+      setHistoryWeekly(weeklyMap);
+      setHistoryMonthly(monthlyMap);
+
       setHistoryLoading(false);
     },
     [session]
@@ -625,11 +651,27 @@ export default function HomePage() {
                   siguiente →
                 </button>
               </div>
+
+              <div className="flex gap-1 mb-4">
+                <button
+                  className={`he-tab ${historyView === "lista" ? "active" : ""}`}
+                  onClick={() => setHistoryView("lista")}
+                >
+                  Lista
+                </button>
+                <button
+                  className={`he-tab ${historyView === "grilla" ? "active" : ""}`}
+                  onClick={() => setHistoryView("grilla")}
+                >
+                  Grilla
+                </button>
+              </div>
+
               {historyLoading ? (
                 <p className="text-sm he-mono" style={{ color: "#6b7280" }}>
                   cargando...
                 </p>
-              ) : (
+              ) : historyView === "lista" ? (
                 <div className="space-y-3">
                   {historyDates
                     .slice()
@@ -653,6 +695,127 @@ export default function HomePage() {
                         </div>
                       );
                     })}
+                </div>
+              ) : (
+                <div>
+                  {points.length === 0 ? (
+                    <p className="text-sm" style={{ color: "#6b7280" }}>
+                      Todavía no tenés puntos diarios cargados.
+                    </p>
+                  ) : (
+                    <div style={{ overflowX: "auto", border: "1px solid #E5E7EB", borderRadius: 12, padding: 8 }}>
+                      <table style={{ borderCollapse: "collapse", fontSize: 10, whiteSpace: "nowrap" }}>
+                        <thead>
+                          <tr>
+                            <th
+                              style={{
+                                position: "sticky",
+                                left: 0,
+                                background: "#FFFFFF",
+                                textAlign: "left",
+                                padding: "4px 8px 4px 2px",
+                                fontWeight: 500,
+                                color: "#6B7280",
+                                minWidth: 110,
+                              }}
+                            >
+                              Punto
+                            </th>
+                            {datesInMonth(historyYm).map((d) => (
+                              <th key={d} style={{ padding: "2px 3px", fontWeight: 400, color: "#9CA3AF", width: 18 }}>
+                                {Number(d.slice(8, 10))}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {points.map((p) => (
+                            <tr key={p.id}>
+                              <td
+                                style={{
+                                  position: "sticky",
+                                  left: 0,
+                                  background: "#FFFFFF",
+                                  padding: "4px 8px 4px 2px",
+                                  fontSize: 11,
+                                  color: "#111827",
+                                }}
+                              >
+                                {p.name}
+                              </td>
+                              {datesInMonth(historyYm).map((d) => {
+                                const isFuture = d > todayISO();
+                                const state = historyData[d]?.values?.[p.id] || "no";
+                                return (
+                                  <td key={d} style={{ textAlign: "center", padding: 2 }}>
+                                    {isFuture ? null : <Seal state={state} size={13} disabled />}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="he-page rounded-2xl p-3">
+                      <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
+                        SEMANAL
+                      </p>
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ borderCollapse: "collapse", fontSize: 10, width: "100%" }}>
+                          <thead>
+                            <tr>
+                              <th></th>
+                              {weeksInMonth(historyYm).map((w) => (
+                                <th key={w} style={{ fontWeight: 400, color: "#9CA3AF", padding: "0 2px 4px" }}>
+                                  {weekRangeLabel(w)}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {WEEKLY_ITEMS.map((item) => (
+                              <tr key={item.key}>
+                                <td style={{ padding: "4px 4px 4px 0", color: "#111827" }}>{item.label}</td>
+                                {weeksInMonth(historyYm).map((w) => (
+                                  <td key={w} style={{ textAlign: "center", padding: 4 }}>
+                                    <Seal state={historyWeekly[w]?.[item.key] || "no"} size={13} disabled />
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="he-page rounded-2xl p-3">
+                      <p className="he-mono text-xs mb-2" style={{ color: "#6b7280" }}>
+                        MENSUAL
+                      </p>
+                      <div className="space-y-2">
+                        {MONTHLY_ITEMS.map((item) => (
+                          <div key={item.key} className="flex items-center justify-between">
+                            <span className="text-xs">{item.label}</span>
+                            <Seal state={historyMonthly[item.key] || "no"} size={14} disabled />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="he-page rounded-2xl p-3 mt-3 flex items-center justify-between">
+                    <div>
+                      <p className="he-mono text-xs" style={{ color: "#6b7280" }}>
+                        COMPROMISO DE GRUPO
+                      </p>
+                      <p className="text-sm mt-1">{GROUP_ITEMS[0].label}</p>
+                    </div>
+                    <Seal state={historyMonthly[GROUP_ITEMS[0].key] || "no"} size={18} disabled />
+                  </div>
                 </div>
               )}
             </div>

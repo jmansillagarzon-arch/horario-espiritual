@@ -110,3 +110,41 @@ export function weekLabel(period: string): string {
 export function monthPeriodLabel(period: string): string {
   return monthLabel(period);
 }
+
+export function weekPeriodForDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const dayNum = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((dt.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${dt.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+export function mondayOfISOWeek(period: string): Date {
+  const [yearStr, weekStr] = period.split("-W");
+  const year = Number(yearStr);
+  const week = Number(weekStr);
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const week1Monday = new Date(jan4);
+  week1Monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1);
+  const monday = new Date(week1Monday);
+  monday.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7);
+  return monday;
+}
+
+export function weekRangeLabel(period: string): string {
+  const monday = mondayOfISOWeek(period);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  const fmt = (d: Date) => d.toLocaleDateString("es", { day: "numeric", month: "short", timeZone: "UTC" });
+  return `${fmt(monday)} - ${fmt(sunday)}`;
+}
+
+export function weeksInMonth(ym: string): string[] {
+  const dates = datesInMonth(ym);
+  const set = new Set<string>();
+  dates.forEach((d) => set.add(weekPeriodForDate(d)));
+  return Array.from(set).sort();
+}
