@@ -16,6 +16,14 @@ export const DIM_LABEL: Record<Dimension, string> = {
   mismo: "Conmigo mismo",
 };
 
+// Orden de visualización en la pestaña "Hoy": Con Dios, Conmigo mismo, Con los hermanos, Con el trabajo
+export const DIMENSION_ORDER: Record<Dimension, number> = {
+  dios: 0,
+  mismo: 1,
+  hermanos: 2,
+  trabajo: 3,
+};
+
 export interface Profile {
   id: string;
   name: string;

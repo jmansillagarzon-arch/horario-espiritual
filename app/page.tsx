@@ -9,6 +9,7 @@ import { subscribeToPush, subscriptionToRow } from "@/lib/push";
 import {
   DIMENSIONS,
   DIM_LABEL,
+  DIMENSION_ORDER,
   Dimension,
   Profile,
   Point,
@@ -595,9 +596,11 @@ export default function HomePage() {
               ) : (
                 <>
                   <div className="space-y-3 mb-5">
-                    {points.map((p) => {
-                      const state = todayData.values[p.id] || "no";
-                      return (
+                    {[...points]
+                      .sort((a, b) => DIMENSION_ORDER[a.dimension] - DIMENSION_ORDER[b.dimension])
+                      .map((p) => {
+                        const state = todayData.values[p.id] || "no";
+                        return (
                         <div key={p.id} className="flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-medium">{p.name}</p>
